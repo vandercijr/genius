@@ -1,5 +1,257 @@
 <!DOCTYPE html>
-<html>
-  <head></head>
-  <body></body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Genius</title>
+
+    <base href="/" />
+
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1.0 user-scalable=no"
+    />
+  </head>
+  <body>
+    <canvas id="genius"></canvas>
+  </body>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("genius");
+      const layers = [];
+      const totalLayers = 6;
+      const numberOfButtons = 4;
+
+      const buttons = [
+        {
+          startAngle: (2 * Math.PI) / numberOfButtons,
+          endAngle: (4 * Math.PI) / numberOfButtons,
+          color: "#0292ad",
+        },
+        {
+          startAngle: (4 * Math.PI) / numberOfButtons,
+          endAngle: (6 * Math.PI) / numberOfButtons,
+          color: "#cd0927",
+        },
+        {
+          startAngle: (6 * Math.PI) / numberOfButtons,
+          endAngle: (8 * Math.PI) / numberOfButtons,
+          color: "#019436",
+        },
+        {
+          startAngle: (8 * Math.PI) / numberOfButtons,
+          endAngle: (10 * Math.PI) / numberOfButtons,
+          color: "#dfb212",
+        },
+      ];
+
+      for (let i = 0; i < totalLayers; i++) {
+        layers.push(document.createElement("canvas"));
+        layers[i].id = `genius_layer_${i}`;
+        layers[i].width = window.innerWidth;
+        layers[i].height = window.innerHeight;
+        layers[i].style["z-index"] = i + 100;
+      }
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const rotationAngle = Math.PI / numberOfButtons;
+
+      const turnButton = (layer, button, on) => {
+        if (on) {
+          const context = layer.getContext("2d");
+          context.save();
+          context.clearRect(0, 0, layer.width, layer.height);
+          console.log("clear", layer.width, layer.height);
+          // drawButton(layer, { ...button, color: "#efbbff" });
+          context.restore();
+        }
+      };
+
+      const draw = (
+        context,
+        x,
+        y,
+        radius,
+        startAngle,
+        endAngle,
+        color,
+        lineColor,
+        lineSize,
+        counterclockwise = true,
+        rotationAngle
+      ) => {
+        context.save();
+        context.translate(x, y);
+        context.rotate(rotationAngle);
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.arc(0, 0, radius, startAngle, endAngle, counterclockwise);
+        context.closePath();
+        context.fillStyle = color;
+        context.fill();
+        context.strokeStyle = lineColor;
+        context.lineWidth = lineSize;
+        context.stroke();
+        context.restore();
+      };
+
+      const drawBackground = (layer) => {
+        const context = layer.getContext("2d");
+        const centerX = layer.width / 2;
+        const centerY = layer.height / 2;
+
+        draw(
+          context,
+          centerX,
+          centerY,
+          context.width * 0.155,
+          0,
+          Math.PI * 2,
+          "#222222",
+          "#222222",
+          0,
+          false,
+          0
+        );
+      };
+
+      const drawFrontSide = (layer) => {
+        const context = layer.getContext("2d");
+        const centerX = layer.width / 2;
+        const centerY = layer.height / 2;
+
+        // context.globalCompositeOperation = "destination-over";
+
+        draw(
+          context,
+          centerX,
+          centerY,
+          layer.width * 0.065,
+          0,
+          Math.PI * 2,
+          "#222222",
+          "#222222",
+          0,
+          false,
+          0
+        );
+
+        draw(
+          context,
+          centerX,
+          centerY,
+          layer.width * 0.05,
+          0,
+          Math.PI * 2,
+          "#B4B9BD",
+          "#B4B9BD",
+          0,
+          false,
+          0
+        );
+
+        const innerSemiCircleRadius = canvas.width * 0.045;
+        draw(
+          context,
+          centerX,
+          centerY,
+          innerSemiCircleRadius,
+          Math.PI,
+          Math.PI * 2,
+          "#222222",
+          "#222222",
+          0,
+          false,
+          0
+        );
+
+        context.font = `${innerSemiCircleRadius * 0.45}px Courier`;
+        context.fillStyle = "#B4B9BD";
+        context.textAlign = "center";
+        context.fillText("GENIUS", centerX, centerY - 10);
+      };
+
+      const drawButton = (layer, button) => {
+        const context = layer.getContext("2d");
+
+        const centerX = layer.width / 2;
+        const centerY = layer.height / 2;
+        draw(
+          context,
+          centerX,
+          centerY,
+          layer.width * 0.15,
+          button.startAngle,
+          button.endAngle,
+          button.color,
+          "#222222",
+          Math.floor(layer.width * 0.015),
+          false,
+          rotationAngle
+        );
+      };
+
+      const sleep = (delay, callback) => {
+        const startTime = performance.now();
+        let endTime = performance.now();
+        while (endTime - startTime <= delay) {
+          endTime = performance.now();
+        }
+
+        callback();
+      };
+
+      const drawScreen = (layers) => {
+        let currentLayerIdx = 0;
+        drawBackground(layers[currentLayerIdx]);
+        const buttonOffColors = ["#0292ad", "#cd0927", "#019436", "#dfb212"];
+        for (let i = currentLayerIdx + 1; i <= numberOfButtons; i++) {
+          drawButton(layers[i], buttons[i - 1]);
+          currentLayerIdx = i;
+        }
+        // // console.log("ccc ", currentLayerIdx, layers);
+
+        // setTimeout(() => {
+        // window.requestAnimationFrame((t) => {
+
+        console.log("calll me");
+        drawFrontSide(layers[5]);
+
+        // turnButton(layers[1], buttons[0], true);
+        // });
+        // }, 1000);
+      };
+
+      // const turnButton = (on, size) => {
+      //   const status = [];
+      //   for (let i = 0; i < size; i++) {
+      //     status.push(i === on);
+      //   }
+      //   return status;
+      // };
+
+      const main = () => {
+        if (canvas) {
+          const buttonOnColors = ["#222222", "#ffffff", "#f4f444", "#aaaa22"];
+          let buttonStatus = [true, false, false, false];
+          drawScreen(layers);
+
+          const ctx = canvas.getContext("2d");
+
+          // ctx.globalCompositeOperation = "destination-over";
+          for (let i = 0; i < totalLayers; i++) {
+            ctx.drawImage(layers[i], 0, 0);
+          }
+          // window.requestAnimationFrame(main);
+        }
+      };
+
+      const init = () => {
+        window.requestAnimationFrame(main);
+      };
+
+      init();
+    });
+  </script>
 </html>
